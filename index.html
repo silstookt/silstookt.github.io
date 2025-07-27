@@ -91,11 +91,139 @@
             color: #666;
             font-style: italic;
         }
+        
+        /* Lightbox/Modal styling voor full-size afbeelding weergave */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            cursor: pointer;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .lightbox.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            cursor: default;
+        }
+        
+        .lightbox-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .lightbox-close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .lightbox-info {
+            position: absolute;
+            bottom: -60px;
+            left: 0;
+            right: 0;
+            color: white;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .lightbox-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.2em;
+        }
+        
+        .lightbox-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .lightbox-info .price {
+            color: #27ae60;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        /* Hover effect voor gallery items om te tonen dat ze klikbaar zijn */
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        
+        .gallery-item img:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+        
+        /* Touch-friendly responsiveness */
+        @media (max-width: 768px) {
+            .lightbox-close {
+                top: 10px;
+                right: 10px;
+                font-size: 24px;
+                width: 35px;
+                height: 35px;
+            }
+            
+            .lightbox-info {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                border-radius: 0;
+            }
+            
+            .lightbox-content {
+                max-width: 95%;
+                max-height: 80%;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Sil Stook!</h1>
+        <h1>Sil Stookt</h1>
     </header>
     
     <main>
@@ -120,6 +248,19 @@
     <footer>
         <p>&copy; 2025 Sil Stook. Alle rechten voorbehouden.</p>
     </footer>
+    
+    <!-- Lightbox voor full-size afbeelding weergave -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-content">
+            <span class="lightbox-close" id="lightbox-close">&times;</span>
+            <img id="lightbox-image" class="lightbox-image" src="" alt="">
+            <div class="lightbox-info" id="lightbox-info">
+                <h3 id="lightbox-title"></h3>
+                <p id="lightbox-description"></p>
+                <p class="price" id="lightbox-price"></p>
+            </div>
+        </div>
+    </div>
     
     <script>
         // Functie om Google Drive URL om te zetten naar directe image URL - ultra robuuste versie
@@ -286,11 +427,17 @@
             // Genereer unieke ID voor elke afbeelding voor fallback systeem
             const imageId = 'img_' + Math.random().toString(36).substr(2, 9);
             
+            // Escape strings voor HTML attributes - verwijder quotes en vervang door safe characters
+            const safeTitle = title.replace(/'/g, '').replace(/"/g, '').replace(/`/g, '');
+            const safeDescription = description.replace(/'/g, '').replace(/"/g, '').replace(/`/g, '');
+            const safePrice = price.replace(/'/g, '').replace(/"/g, '').replace(/`/g, '');
+            
             return `
                 <div class="gallery-item">
                     <img id="${imageId}" 
                          src="${imageUrl}" 
-                         alt="${title}" 
+                         alt="${safeTitle}" 
+                         onclick="openLightbox(this.src, '${safeTitle}', '${safeDescription}', '${safePrice}')"
                          onload="console.log('✅ Image loaded successfully:', '${title}')"
                          onerror="handleImageError('${imageId}', '${originalUrl}', '${title}')">
                     <div class="gallery-item-content">
@@ -405,8 +552,178 @@
             }
         }
         
-        // Laad de galerij wanneer de pagina klaar is
-        document.addEventListener('DOMContentLoaded', loadGallery);
+        // Lightbox functionaliteit voor full-size afbeelding weergave - verbeterde versie
+        function openLightbox(imageSrc, title, description, price) {
+            console.log('🖼️ Opening lightbox with:', {
+                imageSrc: imageSrc,
+                title: title,
+                description: description,
+                price: price
+            });
+            
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightbox-image');
+            const lightboxTitle = document.getElementById('lightbox-title');
+            const lightboxDescription = document.getElementById('lightbox-description');
+            const lightboxPrice = document.getElementById('lightbox-price');
+            
+            if (!lightbox || !lightboxImage) {
+                console.error('❌ Lightbox elements not found!');
+                return;
+            }
+            
+            // Reset de lightbox image eerst
+            lightboxImage.src = '';
+            lightboxImage.style.display = 'none';
+            
+            // Stel de info in
+            lightboxTitle.textContent = title || 'Zonder titel';
+            lightboxDescription.textContent = description || '';
+            lightboxPrice.textContent = price || '';
+            
+            // Toon de lightbox
+            lightbox.classList.add('active');
+            
+            // Voorkom scrolling van de achtergrond
+            document.body.style.overflow = 'hidden';
+            
+            // Laad de afbeelding met foutafhandeling
+            lightboxImage.onload = function() {
+                console.log('✅ Lightbox image loaded successfully');
+                lightboxImage.style.display = 'block';
+            };
+            
+            lightboxImage.onerror = function() {
+                console.error('❌ Lightbox image failed to load:', imageSrc);
+                // Probeer fallback URL's voor lightbox
+                tryLightboxFallbacks(imageSrc, title);
+            };
+            
+            // Stel de afbeelding in (dit moet laatste zijn)
+            lightboxImage.src = imageSrc;
+            lightboxImage.alt = title || 'Afbeelding';
+            
+            console.log('🖼️ Lightbox opened for:', title);
+        }
+        
+        // Fallback systeem specifiek voor lightbox afbeeldingen
+        function tryLightboxFallbacks(originalSrc, title) {
+            console.log('🔄 Trying lightbox fallbacks for:', originalSrc);
+            
+            const lightboxImage = document.getElementById('lightbox-image');
+            if (!lightboxImage) return;
+            
+            const fallbackUrls = [];
+            
+            // Als het een Google Drive URL is, probeer verschillende formaten
+            if (originalSrc.includes('drive.google.com')) {
+                const fileIdMatch = originalSrc.match(/([a-zA-Z0-9-_]{25,})/);
+                if (fileIdMatch) {
+                    const fileId = fileIdMatch[1];
+                    fallbackUrls.push(
+                        `https://drive.google.com/uc?export=download&id=${fileId}`,
+                        `https://lh3.googleusercontent.com/d/${fileId}=w1000`,
+                        `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`,
+                        `https://drive.google.com/file/d/${fileId}/preview`
+                    );
+                }
+            }
+            
+            let currentFallback = 0;
+            
+            const tryNext = () => {
+                if (currentFallback < fallbackUrls.length) {
+                    const fallbackUrl = fallbackUrls[currentFallback];
+                    console.log(`🔄 Trying lightbox fallback ${currentFallback + 1}:`, fallbackUrl);
+                    
+                    lightboxImage.onload = () => {
+                        console.log('✅ Lightbox fallback successful:', fallbackUrl);
+                        lightboxImage.style.display = 'block';
+                    };
+                    
+                    lightboxImage.onerror = () => {
+                        currentFallback++;
+                        tryNext();
+                    };
+                    
+                    lightboxImage.src = fallbackUrl;
+                } else {
+                    console.log('❌ All lightbox fallbacks failed, showing error message');
+                    lightboxImage.style.display = 'none';
+                    // Toon een foutmelding in de lightbox
+                    const lightboxInfo = document.getElementById('lightbox-info');
+                    if (lightboxInfo) {
+                        lightboxInfo.innerHTML = `
+                            <h3>${title || 'Afbeelding'}</h3>
+                            <p style="color: #ff6b6b;">Afbeelding kon niet worden geladen</p>
+                            <p style="font-size: 0.9em; opacity: 0.7;">Probeer later opnieuw</p>
+                        `;
+                    }
+                }
+            };
+            
+            tryNext();
+        }
+        
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            
+            // Herstel scrolling
+            document.body.style.overflow = 'auto';
+            
+            console.log('❌ Lightbox closed');
+        }
+        
+        // Event listeners voor lightbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxClose = document.getElementById('lightbox-close');
+            const lightboxContent = document.querySelector('.lightbox-content');
+            
+            // Sluit lightbox bij klik op close button
+            lightboxClose.addEventListener('click', closeLightbox);
+            
+            // Sluit lightbox bij klik op achtergrond (niet op de afbeelding)
+            lightbox.addEventListener('click', function(e) {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+            
+            // Voorkom dat klik op lightbox content de lightbox sluit
+            lightboxContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Sluit lightbox met Escape toets
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+                    closeLightbox();
+                }
+            });
+            
+            // Touch events voor mobiele apparaten
+            let touchStartY = 0;
+            let touchEndY = 0;
+            
+            lightbox.addEventListener('touchstart', function(e) {
+                touchStartY = e.changedTouches[0].screenY;
+            });
+            
+            lightbox.addEventListener('touchend', function(e) {
+                touchEndY = e.changedTouches[0].screenY;
+                
+                // Als er een significante swipe omhoog of omlaag is, sluit de lightbox
+                const swipeDistance = Math.abs(touchEndY - touchStartY);
+                if (swipeDistance > 100) {
+                    closeLightbox();
+                }
+            });
+            
+            // Laad de galerij
+            loadGallery();
+        });
     </script>
 </body>
 </html>
