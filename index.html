@@ -35,6 +35,62 @@
             border-top: 1px solid #eee;
             color: #666;
         }
+        
+        .gallery {
+            margin: 30px 0;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .gallery-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .gallery-item-content {
+            padding: 15px;
+        }
+        
+        .gallery-item h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        
+        .gallery-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .gallery-item .price {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 1.1em;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -52,10 +108,106 @@
             <h2>Over mij</h2>
             <p>Dit is de persoonlijke website van Sil Stook. Meer inhoud volgt binnenkort...</p>
         </section>
+        
+        <section class="gallery">
+            <h2>Galerij</h2>
+            <p>Hier zijn enkele van mijn werken:</p>
+            <div class="loading" id="loading">Bezig met laden van de galerij...</div>
+            <div class="gallery-grid" id="gallery-grid"></div>
+        </section>
     </main>
     
     <footer>
         <p>&copy; 2025 Sil Stook. Alle rechten voorbehouden.</p>
     </footer>
+    
+    <script>
+        // Functie om Google Drive URL om te zetten naar directe image URL
+        function convertGoogleDriveUrl(url) {
+            const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (fileIdMatch) {
+                return `https://drive.google.com/uc?export=view&id=${fileIdMatch[1]}`;
+            }
+            return url;
+        }
+        
+        // Functie om CSV te parseren
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] ? values[index].trim() : '';
+                });
+                data.push(row);
+            }
+            
+            return data;
+        }
+        
+        // Functie om galerij item te maken
+        function createGalleryItem(item) {
+            const imageUrl = convertGoogleDriveUrl(item['Image URL'] || item['Image URL']);
+            
+            return `
+                <div class="gallery-item">
+                    <img src="${imageUrl}" alt="${item.Titel || item.Title || ''}" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2Ij5BZmJlZWxkaW5nIG5pZXQgYmVzY2hpa2JhYXI8L3RleHQ+PC9zdmc+'">
+                    <div class="gallery-item-content">
+                        <h3>${item.Titel || item.Title || 'Zonder titel'}</h3>
+                        <p>${item.Beschrijving || item.Description || ''}</p>
+                        <p class="price">${item.Prijs || item.Price || ''}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Hoofdfunctie om CSV data te laden
+        async function loadGallery() {
+            try {
+                // Voeg timestamp toe om cache te voorkomen
+                const timestamp = new Date().getTime();
+                const csvUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4D_i1bEqe6shBt6ZlKnYacUne-1csFmyQwYfeFRQ-NsjbbBCH2JQgM47d8Ro9tr6mu-7bbs12VMF/pub?output=csv&timestamp=${timestamp}`;
+                
+                // Gebruik een CORS proxy voor het ophalen van de CSV
+                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
+                
+                // Voeg cache-busting headers toe
+                const response = await fetch(proxyUrl, {
+                    method: 'GET',
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+                const csvText = await response.text();
+                
+                const galleryData = parseCSV(csvText);
+                
+                const galleryGrid = document.getElementById('gallery-grid');
+                const loading = document.getElementById('loading');
+                
+                if (galleryData.length > 0) {
+                    galleryGrid.innerHTML = galleryData.map(createGalleryItem).join('');
+                    loading.style.display = 'none';
+                } else {
+                    loading.textContent = 'Geen galerij items gevonden.';
+                }
+                
+            } catch (error) {
+                console.error('Fout bij het laden van de galerij:', error);
+                document.getElementById('loading').textContent = 'Fout bij het laden van de galerij. Probeer later opnieuw.';
+            }
+        }
+        
+        // Laad de galerij wanneer de pagina klaar is
+        document.addEventListener('DOMContentLoaded', loadGallery);
+    </script>
 </body>
 </html>
