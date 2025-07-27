@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sil Stook!</title>
+    <!-- Logo als favicon - SVG ondersteuning -->
+    <link rel="icon" type="image/svg+xml" href="https://drive.google.com/uc?export=view&id=1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN">
+    <!-- Fallback voor browsers zonder SVG favicon ondersteuning -->
+    <link rel="icon" type="image/png" href="https://drive.google.com/thumbnail?id=1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN&sz=w32">
+    <!-- Apple touch icon -->
+    <link rel="apple-touch-icon" href="https://drive.google.com/thumbnail?id=1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN&sz=w180">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,8 +23,30 @@
         h1 {
             color: #2c3e50;
             text-align: center;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
+            padding-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 0 25% 30px 25%;
+            width: 50%;
+        }
+        
+        .logo {
+            width: 50%;
+            height: auto;
+            display: block !important;
+            max-width: none;
+            margin: 0 auto;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         
         .welcome {
@@ -271,6 +299,17 @@
         
         /* Touch-friendly responsiveness */
         @media (max-width: 768px) {
+            .logo {
+                width: 70%;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+                margin: 0 15% 20px 15%;
+                width: 70%;
+                padding-bottom: 15px;
+            }
+            
             .lightbox-zoom-controls {
                 top: 15px;
                 left: 15px;
@@ -319,7 +358,13 @@
 </head>
 <body>
     <header>
-        <h1>Sil Stookt</h1>
+        <h1>
+            <img src="https://drive.google.com/uc?export=view&id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE" 
+                 alt="Sil Stook Logo" 
+                 class="logo"
+                 onload="console.log('✅ Header logo loaded successfully')"
+                 onerror="console.log('❌ Header logo failed, trying fallback'); this.src='https://drive.google.com/thumbnail?id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE&sz=w400'">
+        </h1>
     </header>
     
     <main>
