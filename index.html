@@ -131,78 +131,131 @@
             return url;
         }
         
-        // Functie om CSV te parseren
+        // Functie om CSV te parseren - verbeterde versie
         function parseCSV(csvText) {
+            console.log('Raw CSV data:', csvText); // Debug
+            
             const lines = csvText.trim().split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
+            if (lines.length < 2) {
+                console.log('Not enough lines in CSV');
+                return [];
+            }
+            
+            // Verwijder mogelijke BOM en quotes
+            const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim().replace(/"/g, ''));
+            console.log('Headers found:', headers); // Debug
+            
             const data = [];
             
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',');
+                if (lines[i].trim() === '') continue; // Skip lege regels
+                
+                // Betere CSV parsing die rekening houdt met komma's in quotes
+                const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
                 const row = {};
+                
                 headers.forEach((header, index) => {
-                    row[header] = values[index] ? values[index].trim() : '';
+                    if (values[index]) {
+                        row[header] = values[index].trim().replace(/^"/, '').replace(/"$/, '');
+                    } else {
+                        row[header] = '';
+                    }
                 });
+                
+                console.log('Parsed row:', row); // Debug
                 data.push(row);
             }
             
             return data;
         }
         
-        // Functie om galerij item te maken
+        // Functie om galerij item te maken - verbeterde versie
         function createGalleryItem(item) {
-            const imageUrl = convertGoogleDriveUrl(item['Image URL'] || item['Image URL']);
+            console.log('Creating gallery item for:', item);
+            
+            // Probeer verschillende veldnamen voor flexibiliteit
+            const imageUrl = convertGoogleDriveUrl(
+                item['Image URL'] || 
+                item['image url'] || 
+                item['ImageURL'] || 
+                item['url'] || 
+                item['URL'] || 
+                ''
+            );
+            
+            const title = item['Titel'] || 
+                         item['Title'] || 
+                         item['titel'] || 
+                         item['title'] || 
+                         'Zonder titel';
+            
+            const description = item['Beschrijving'] || 
+                               item['Description'] || 
+                               item['beschrijving'] || 
+                               item['description'] || 
+                               '';
+            
+            const price = item['Prijs'] || 
+                         item['Price'] || 
+                         item['prijs'] || 
+                         item['price'] || 
+                         '';
             
             return `
                 <div class="gallery-item">
-                    <img src="${imageUrl}" alt="${item.Titel || item.Title || ''}" 
+                    <img src="${imageUrl}" alt="${title}" 
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2Ij5BZmJlZWxkaW5nIG5pZXQgYmVzY2hpa2JhYXI8L3RleHQ+PC9zdmc+'">
                     <div class="gallery-item-content">
-                        <h3>${item.Titel || item.Title || 'Zonder titel'}</h3>
-                        <p>${item.Beschrijving || item.Description || ''}</p>
-                        <p class="price">${item.Prijs || item.Price || ''}</p>
+                        <h3>${title}</h3>
+                        <p>${description}</p>
+                        <p class="price">${price}</p>
                     </div>
                 </div>
             `;
         }
         
-        // Hoofdfunctie om CSV data te laden
+        // Hoofdfunctie om CSV data te laden - eenvoudige versie
         async function loadGallery() {
+            const loading = document.getElementById('loading');
+            const galleryGrid = document.getElementById('gallery-grid');
+            
+            loading.textContent = 'Bezig met laden van de galerij...';
+            loading.style.display = 'block';
+            
             try {
                 // Voeg timestamp toe om cache te voorkomen
                 const timestamp = new Date().getTime();
-                const csvUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4D_i1bEqe6shBt6ZlKnYacUne-1csFmyQwYfeFRQ-NsjbbBCH2JQgM47d8Ro9tr6mu-7bbs12VMF/pub?output=csv&timestamp=${timestamp}`;
+                const csvUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vRr4D_i1bEqe6shBt6ZlKnYacUne-1csFmyQwYfeFRQ-NsjbbBCH2JQgM47d8Ro9tr6mu-7bbs12VMF/pub?output=csv&t=${timestamp}`;
                 
-                // Gebruik een CORS proxy voor het ophalen van de CSV
+                console.log('Trying to fetch CSV from:', csvUrl);
+                
+                // Gebruik CORS proxy
                 const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(csvUrl);
                 
-                // Voeg cache-busting headers toe
-                const response = await fetch(proxyUrl, {
-                    method: 'GET',
-                    cache: 'no-cache',
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const csvText = await response.text();
+                console.log('CSV Text received:', csvText.substring(0, 200) + '...');
                 
                 const galleryData = parseCSV(csvText);
-                
-                const galleryGrid = document.getElementById('gallery-grid');
-                const loading = document.getElementById('loading');
+                console.log('Parsed gallery data:', galleryData);
                 
                 if (galleryData.length > 0) {
                     galleryGrid.innerHTML = galleryData.map(createGalleryItem).join('');
                     loading.style.display = 'none';
+                    console.log('Gallery loaded successfully with', galleryData.length, 'items');
                 } else {
-                    loading.textContent = 'Geen galerij items gevonden.';
+                    loading.textContent = 'Geen galerij items gevonden in de CSV data.';
+                    console.log('No gallery items found');
                 }
                 
             } catch (error) {
                 console.error('Fout bij het laden van de galerij:', error);
-                document.getElementById('loading').textContent = 'Fout bij het laden van de galerij. Probeer later opnieuw.';
+                loading.textContent = `Fout bij het laden van de galerij: ${error.message}. Controleer de browser console voor meer details.`;
             }
         }
         
