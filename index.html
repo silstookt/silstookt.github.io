@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sil Stook!</title>
     <!-- Logo als favicon - SVG ondersteuning -->
-    <link rel="icon" type="image/svg+xml" href="https://drive.google.com/uc?export=view&id=1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN">
+    <link rel="icon" type="image/svg+xml" href="https://lh3.googleusercontent.com/d/1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN=s0">
     <!-- Fallback voor browsers zonder SVG favicon ondersteuning -->
     <link rel="icon" type="image/png" href="https://drive.google.com/thumbnail?id=1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN&sz=w32">
     <!-- Apple touch icon -->
@@ -34,11 +34,14 @@
         }
         
         .logo {
-            width: 50%;
+            width: 100%;
             height: auto;
             display: block !important;
             max-width: none;
             margin: 0 auto;
+            shape-rendering: geometricPrecision;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
         
         .header-content {
@@ -363,7 +366,7 @@
                  alt="Sil Stook Logo" 
                  class="logo"
                  onload="console.log('✅ Header logo loaded successfully')"
-                 onerror="console.log('❌ Header logo failed, trying fallback'); this.src='https://drive.google.com/thumbnail?id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE&sz=w400'">
+                 onerror="console.log('❌ Header logo failed, trying fallback'); this.src='https://drive.google.com/thumbnail?id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE&sz=w800'">
         </h1>
     </header>
     
@@ -456,8 +459,9 @@
             
             // Als we een file ID hebben gevonden, converteer naar directe URL
             if (fileId && url.includes('drive.google.com')) {
+                // Voor betere kwaliteit, gebruik view URL in plaats van download
                 const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-                console.log('Converted to direct URL:', directUrl);
+                console.log('Converted to view URL for better quality:', directUrl);
                 return directUrl;
             }
             
