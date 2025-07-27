@@ -125,8 +125,9 @@
             object-fit: contain;
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            transition: transform 0.2s ease;
+            transition: transform 0.1s ease-out;
             cursor: grab;
+            transform-origin: center center;
         }
         
         .lightbox-image.zoomed {
@@ -792,8 +793,9 @@
         let maxZoom = 5;
         let isDragging = false;
         let startX, startY, initialX, initialY;
+        let panSensitivity = 0.6; // Verminder gevoeligheid voor panning (0.6 = 60% van originele beweging)
         
-        // Zoom functionaliteit
+        // Zoom functionaliteit - verbeterde versie zonder conflicten
         function initializeZoom() {
             const lightboxImage = document.getElementById('lightbox-image');
             const lightbox = document.getElementById('lightbox');
@@ -801,15 +803,19 @@
             // Mouse wheel zoom
             lightbox.addEventListener('wheel', handleZoom);
             
-            // Touch zoom (pinch-to-zoom)
+            // Touch zoom (pinch-to-zoom) - verbeterde versie
             let lastTouchDistance = 0;
+            let isZooming = false;
             
             lightbox.addEventListener('touchstart', function(e) {
                 if (e.touches.length === 2) {
                     // Pinch-to-zoom start
+                    e.preventDefault();
+                    isZooming = true;
                     lastTouchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                    console.log('🤏 Pinch-to-zoom started');
                 } else if (e.touches.length === 1 && currentZoom > 1) {
-                    // Pan start
+                    // Pan start - alleen als er al gezoomd is
                     isDragging = true;
                     startX = e.touches[0].clientX;
                     startY = e.touches[0].clientY;
@@ -821,19 +827,20 @@
             });
             
             lightbox.addEventListener('touchmove', function(e) {
-                if (e.touches.length === 2) {
+                if (e.touches.length === 2 && isZooming) {
                     // Pinch-to-zoom
                     e.preventDefault();
+                    e.stopPropagation();
                     const newDistance = getTouchDistance(e.touches[0], e.touches[1]);
                     const zoomChange = newDistance / lastTouchDistance;
                     const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * zoomChange));
                     setZoom(newZoom);
                     lastTouchDistance = newDistance;
-                } else if (isDragging && e.touches.length === 1) {
-                    // Pan
+                } else if (isDragging && e.touches.length === 1 && currentZoom > 1) {
+                    // Pan - alleen bij single touch en zoom > 1, met verminderde gevoeligheid
                     e.preventDefault();
-                    const deltaX = e.touches[0].clientX - startX;
-                    const deltaY = e.touches[0].clientY - startY;
+                    const deltaX = (e.touches[0].clientX - startX) * panSensitivity;
+                    const deltaY = (e.touches[0].clientY - startY) * panSensitivity;
                     const newX = initialX + deltaX;
                     const newY = initialY + deltaY;
                     lightboxImage.style.transform = `scale(${currentZoom}) translate(${newX}px, ${newY}px)`;
@@ -841,9 +848,12 @@
             });
             
             lightbox.addEventListener('touchend', function(e) {
-                isDragging = false;
                 if (e.touches.length < 2) {
+                    isZooming = false;
                     lastTouchDistance = 0;
+                }
+                if (e.touches.length === 0) {
+                    isDragging = false;
                 }
             });
             
@@ -863,8 +873,9 @@
             
             document.addEventListener('mousemove', function(e) {
                 if (isDragging && currentZoom > 1) {
-                    const deltaX = e.clientX - startX;
-                    const deltaY = e.clientY - startY;
+                    // Mouse drag met verminderde gevoeligheid
+                    const deltaX = (e.clientX - startX) * panSensitivity;
+                    const deltaY = (e.clientY - startY) * panSensitivity;
                     const newX = initialX + deltaX;
                     const newY = initialY + deltaY;
                     lightboxImage.style.transform = `scale(${currentZoom}) translate(${newX}px, ${newY}px)`;
@@ -969,22 +980,50 @@
                 }
             });
             
-            // Touch events voor mobiele apparaten
+            // Touch events voor mobiele apparaten - verbeterde versie
             let touchStartY = 0;
             let touchEndY = 0;
+            let touchCount = 0;
+            let isPinching = false;
             
             lightbox.addEventListener('touchstart', function(e) {
-                touchStartY = e.changedTouches[0].screenY;
+                touchCount = e.touches.length;
+                
+                // Alleen track single touch voor swipe-to-close
+                if (touchCount === 1) {
+                    touchStartY = e.changedTouches[0].screenY;
+                    isPinching = false;
+                } else if (touchCount === 2) {
+                    // Multi-touch detecteren (pinch)
+                    isPinching = true;
+                }
+            });
+            
+            lightbox.addEventListener('touchmove', function(e) {
+                // Update pinching status
+                if (e.touches.length >= 2) {
+                    isPinching = true;
+                }
             });
             
             lightbox.addEventListener('touchend', function(e) {
-                touchEndY = e.changedTouches[0].screenY;
-                
-                // Als er een significante swipe omhoog of omlaag is, sluit de lightbox
-                const swipeDistance = Math.abs(touchEndY - touchStartY);
-                if (swipeDistance > 100) {
-                    closeLightbox();
+                // Alleen swipe-to-close bij single touch en geen pinching
+                if (touchCount === 1 && !isPinching && e.changedTouches.length === 1) {
+                    touchEndY = e.changedTouches[0].screenY;
+                    
+                    // Als er een significante swipe omhoog of omlaag is EN geen zoom actief
+                    const swipeDistance = Math.abs(touchEndY - touchStartY);
+                    if (swipeDistance > 150 && currentZoom <= 1.1) {
+                        console.log('🔄 Swipe-to-close detected');
+                        closeLightbox();
+                    }
                 }
+                
+                // Reset tracking variabelen
+                setTimeout(() => {
+                    isPinching = false;
+                    touchCount = 0;
+                }, 100);
             });
             
             // Laad de galerij
