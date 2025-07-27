@@ -125,14 +125,24 @@
             object-fit: contain;
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease;
+            cursor: grab;
+        }
+        
+        .lightbox-image.zoomed {
+            cursor: move;
+        }
+        
+        .lightbox-image:active {
+            cursor: grabbing;
         }
         
         .lightbox-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
+            position: fixed;
+            top: 20px;
+            right: 20px;
             color: white;
-            font-size: 30px;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
             width: 40px;
@@ -140,25 +150,92 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.7);
             border-radius: 50%;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
+            z-index: 1001;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
         
         .lightbox-close:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 0, 0, 0.6);
+            transform: scale(1.1);
+        }
+        
+        .lightbox-close:active {
+            transform: scale(0.95);
+        }
+        
+        /* Zoom controls - responsive positioning */
+        .lightbox-zoom-controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1001;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 25px;
+            padding: 8px 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .lightbox-zoom-btn {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            user-select: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .lightbox-zoom-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .lightbox-zoom-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .lightbox-zoom-info {
+            color: white;
+            font-size: 11px;
+            padding: 6px 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
         }
         
         .lightbox-info {
-            position: absolute;
-            bottom: -60px;
-            left: 0;
-            right: 0;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
             color: white;
             text-align: center;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 15px;
-            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 12px;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
         }
         
         .lightbox-info h3 {
@@ -193,20 +270,38 @@
         
         /* Touch-friendly responsiveness */
         @media (max-width: 768px) {
+            .lightbox-zoom-controls {
+                top: 15px;
+                left: 15px;
+                gap: 8px;
+                padding: 6px 10px;
+            }
+            
+            .lightbox-zoom-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+            
+            .lightbox-zoom-info {
+                font-size: 10px;
+                padding: 4px 8px;
+                min-width: 40px;
+            }
+            
             .lightbox-close {
-                top: 10px;
-                right: 10px;
-                font-size: 24px;
-                width: 35px;
-                height: 35px;
+                top: 15px;
+                right: 15px;
+                font-size: 20px;
+                width: 36px;
+                height: 36px;
             }
             
             .lightbox-info {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                border-radius: 0;
+                bottom: 15px;
+                left: 15px;
+                right: 15px;
+                padding: 12px 16px;
             }
             
             .lightbox-content {
@@ -251,14 +346,23 @@
     
     <!-- Lightbox voor full-size afbeelding weergave -->
     <div id="lightbox" class="lightbox">
+        <!-- Controls buiten lightbox-content zodat ze niet mee transformeren -->
+        <div class="lightbox-zoom-controls">
+            <span class="lightbox-zoom-btn" id="zoom-out" title="Uitzoomen" onclick="zoomOut()">−</span>
+            <span class="lightbox-zoom-info" id="zoom-level">100%</span>
+            <span class="lightbox-zoom-btn" id="zoom-in" title="Inzoomen" onclick="zoomIn()">+</span>
+            <span class="lightbox-zoom-btn" id="zoom-reset" title="Reset zoom" onclick="resetZoom()">⌂</span>
+        </div>
+        <span class="lightbox-close" id="lightbox-close">&times;</span>
+        
         <div class="lightbox-content">
-            <span class="lightbox-close" id="lightbox-close">&times;</span>
             <img id="lightbox-image" class="lightbox-image" src="" alt="">
-            <div class="lightbox-info" id="lightbox-info">
-                <h3 id="lightbox-title"></h3>
-                <p id="lightbox-description"></p>
-                <p class="price" id="lightbox-price"></p>
-            </div>
+        </div>
+        
+        <div class="lightbox-info" id="lightbox-info">
+            <h3 id="lightbox-title"></h3>
+            <p id="lightbox-description"></p>
+            <p class="price" id="lightbox-price"></p>
         </div>
     </div>
     
@@ -552,7 +656,7 @@
             }
         }
         
-        // Lightbox functionaliteit voor full-size afbeelding weergave - verbeterde versie
+        // Lightbox functionaliteit voor full-size afbeelding weergave - verbeterde versie met zoom
         function openLightbox(imageSrc, title, description, price) {
             console.log('🖼️ Opening lightbox with:', {
                 imageSrc: imageSrc,
@@ -571,6 +675,9 @@
                 console.error('❌ Lightbox elements not found!');
                 return;
             }
+            
+            // Reset zoom en positionering
+            resetZoom();
             
             // Reset de lightbox image eerst
             lightboxImage.src = '';
@@ -591,6 +698,7 @@
             lightboxImage.onload = function() {
                 console.log('✅ Lightbox image loaded successfully');
                 lightboxImage.style.display = 'block';
+                initializeZoom(); // Start zoom functionaliteit
             };
             
             lightboxImage.onerror = function() {
@@ -669,10 +777,168 @@
             const lightbox = document.getElementById('lightbox');
             lightbox.classList.remove('active');
             
+            // Reset zoom wanneer lightbox wordt gesloten
+            resetZoom();
+            
             // Herstel scrolling
             document.body.style.overflow = 'auto';
             
             console.log('❌ Lightbox closed');
+        }
+        
+        // Zoom functionaliteit variabelen
+        let currentZoom = 1;
+        let minZoom = 0.5;
+        let maxZoom = 5;
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+        
+        // Zoom functionaliteit
+        function initializeZoom() {
+            const lightboxImage = document.getElementById('lightbox-image');
+            const lightbox = document.getElementById('lightbox');
+            
+            // Mouse wheel zoom
+            lightbox.addEventListener('wheel', handleZoom);
+            
+            // Touch zoom (pinch-to-zoom)
+            let lastTouchDistance = 0;
+            
+            lightbox.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    // Pinch-to-zoom start
+                    lastTouchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                } else if (e.touches.length === 1 && currentZoom > 1) {
+                    // Pan start
+                    isDragging = true;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    const transform = lightboxImage.style.transform;
+                    const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
+                    initialX = translate ? parseFloat(translate[1]) : 0;
+                    initialY = translate ? parseFloat(translate[2]) : 0;
+                }
+            });
+            
+            lightbox.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    // Pinch-to-zoom
+                    e.preventDefault();
+                    const newDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                    const zoomChange = newDistance / lastTouchDistance;
+                    const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * zoomChange));
+                    setZoom(newZoom);
+                    lastTouchDistance = newDistance;
+                } else if (isDragging && e.touches.length === 1) {
+                    // Pan
+                    e.preventDefault();
+                    const deltaX = e.touches[0].clientX - startX;
+                    const deltaY = e.touches[0].clientY - startY;
+                    const newX = initialX + deltaX;
+                    const newY = initialY + deltaY;
+                    lightboxImage.style.transform = `scale(${currentZoom}) translate(${newX}px, ${newY}px)`;
+                }
+            });
+            
+            lightbox.addEventListener('touchend', function(e) {
+                isDragging = false;
+                if (e.touches.length < 2) {
+                    lastTouchDistance = 0;
+                }
+            });
+            
+            // Mouse drag voor panning
+            lightboxImage.addEventListener('mousedown', function(e) {
+                if (currentZoom > 1) {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    const transform = lightboxImage.style.transform;
+                    const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
+                    initialX = translate ? parseFloat(translate[1]) : 0;
+                    initialY = translate ? parseFloat(translate[2]) : 0;
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging && currentZoom > 1) {
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    const newX = initialX + deltaX;
+                    const newY = initialY + deltaY;
+                    lightboxImage.style.transform = `scale(${currentZoom}) translate(${newX}px, ${newY}px)`;
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+            });
+        }
+        
+        function handleZoom(e) {
+            e.preventDefault();
+            const zoomChange = e.deltaY > 0 ? 0.9 : 1.1;
+            const newZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom * zoomChange));
+            setZoom(newZoom);
+        }
+        
+        function setZoom(zoom) {
+            currentZoom = zoom;
+            const lightboxImage = document.getElementById('lightbox-image');
+            const zoomLevel = document.getElementById('zoom-level');
+            
+            // Update transform (behoud huidige translate als die er is)
+            const currentTransform = lightboxImage.style.transform;
+            const translate = currentTransform.match(/translate\(([^)]+)\)/);
+            const translatePart = translate ? ` translate(${translate[1]})` : '';
+            
+            lightboxImage.style.transform = `scale(${zoom})${translatePart}`;
+            
+            // Update zoom level display
+            zoomLevel.textContent = Math.round(zoom * 100) + '%';
+            
+            // Update cursor
+            if (zoom > 1) {
+                lightboxImage.classList.add('zoomed');
+            } else {
+                lightboxImage.classList.remove('zoomed');
+            }
+            
+            console.log('🔍 Zoom set to:', Math.round(zoom * 100) + '%');
+        }
+        
+        function zoomIn() {
+            const newZoom = Math.min(maxZoom, currentZoom * 1.2);
+            setZoom(newZoom);
+        }
+        
+        function zoomOut() {
+            const newZoom = Math.max(minZoom, currentZoom / 1.2);
+            setZoom(newZoom);
+        }
+        
+        function resetZoom() {
+            currentZoom = 1;
+            const lightboxImage = document.getElementById('lightbox-image');
+            const zoomLevel = document.getElementById('zoom-level');
+            
+            if (lightboxImage) {
+                lightboxImage.style.transform = 'scale(1)';
+                lightboxImage.classList.remove('zoomed');
+            }
+            
+            if (zoomLevel) {
+                zoomLevel.textContent = '100%';
+            }
+            
+            console.log('🔄 Zoom reset to 100%');
+        }
+        
+        function getTouchDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
         }
         
         // Event listeners voor lightbox
