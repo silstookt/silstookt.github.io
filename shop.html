@@ -142,7 +142,7 @@
             return url;
         }
         
-        // Functie om CSV te parseren - verbeterde versie
+        // Functie om CSV te parseren - robuuste versie die correct omgaat met komma's in quoted fields
         function parseCSV(csvText) {
             console.log('Raw CSV data:', csvText); // Debug
             
@@ -152,8 +152,46 @@
                 return [];
             }
             
-            // Verwijder mogelijke BOM en quotes
-            const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim().replace(/"/g, ''));
+            // Parse een CSV regel - correct omgaan met quoted fields
+            function parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                let i = 0;
+                
+                while (i < line.length) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            // Dubbele quote binnen quoted field = escaped quote
+                            current += '"';
+                            i += 2;
+                        } else {
+                            // Toggle quote status
+                            inQuotes = !inQuotes;
+                            i++;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        // Field separator buiten quotes
+                        result.push(current.trim());
+                        current = '';
+                        i++;
+                    } else {
+                        // Gewone karakters
+                        current += char;
+                        i++;
+                    }
+                }
+                
+                // Voeg laatste field toe
+                result.push(current.trim());
+                return result;
+            }
+            
+            // Parse headers
+            const headerLine = lines[0].replace(/^\uFEFF/, ''); // Verwijder BOM
+            const headers = parseCSVLine(headerLine);
             console.log('Headers found:', headers); // Debug
             
             const data = [];
@@ -161,13 +199,12 @@
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim() === '') continue; // Skip lege regels
                 
-                // Betere CSV parsing die rekening houdt met komma's in quotes
-                const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+                const values = parseCSVLine(lines[i]);
                 const row = {};
                 
                 headers.forEach((header, index) => {
-                    if (values[index]) {
-                        row[header] = values[index].trim().replace(/^"/, '').replace(/"$/, '');
+                    if (index < values.length) {
+                        row[header] = values[index] || '';
                     } else {
                         row[header] = '';
                     }
