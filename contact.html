@@ -16,11 +16,13 @@
 <body>
     <header>
         <div class="header-container">
-            <img src="https://drive.google.com/uc?export=view&id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE" 
-                 alt="Sil Stook Logo" 
-                 class="logo"
-                 onload="console.log('✅ Header logo loaded successfully')"
-                 onerror="console.log('❌ Header logo failed, trying fallback'); this.src='https://drive.google.com/thumbnail?id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE&sz=w800'">
+            <h1>
+                <img src="https://drive.google.com/uc?export=view&id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE" 
+                     alt="Sil Stook Logo" 
+                     class="logo"
+                     onload="console.log('✅ Header logo loaded successfully')"
+                     onerror="console.log('❌ Header logo failed, trying fallback'); this.src='https://drive.google.com/thumbnail?id=1FFqyxfwtvYE9iqncYQkgXwOhnv2rewjE&sz=w800'">
+            </h1>
             
             <nav class="navigation">
                 <a href="index.html" class="nav-button">Home</a>
@@ -54,42 +56,11 @@
                     <p>Bezoek op afspraak</p>
                 </div>
             </div>
-            
-            <div class="contact-form">
-                <h3>Stuur een bericht</h3>
-                <form action="#" method="post">
-                    <div class="form-group">
-                        <label for="name">Naam:</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="subject">Onderwerp:</label>
-                        <input type="text" id="subject" name="subject" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="message">Bericht:</label>
-                        <textarea id="message" name="message" required></textarea>
-                    </div>
-                    
-                    <button type="submit" class="submit-btn">Verstuur bericht</button>
-                </form>
-                
-                <div class="note">
-                    <strong>Let op:</strong> Dit contactformulier is momenteel nog niet actief. Stuur uw bericht voorlopig direct naar het bovenstaande email adres.
-                </div>
-            </div>
         </div>
     </main>
     
     <footer>
-        <p>&copy; 2025 Sil Stook. Alle rechten voorbehouden.</p>
+        <p>Volg mij binnekort op <a href="https://www.instagram.com/silstookt/" target="_blank" class="instagram-link"><span class="instagram-icon"></span> silstookt</a></p>
     </footer>
 </body>
 </html>
