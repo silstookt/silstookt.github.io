@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galerij - Sil Stook!</title>
+    <title>Shop - Sil Stook!</title>
     <!-- Logo als favicon - SVG ondersteuning -->
     <link rel="icon" type="image/svg+xml" href="https://lh3.googleusercontent.com/d/1FQPt_H-a1PNAfRAy1LA0graRtn5R34iN=s0">
     <!-- Fallback voor browsers zonder SVG favicon ondersteuning -->
@@ -26,7 +26,7 @@
             
             <nav class="navigation">
                 <a href="index.html" class="nav-button">Home</a>
-                <a href="galerij.html" class="nav-button active">Galerij</a>
+                <a href="shop.html" class="nav-button active">Shop</a>
                 <a href="contact.html" class="nav-button">Contact</a>
             </nav>
         </div>
@@ -34,9 +34,9 @@
     
     <main>
         <section class="gallery">
-            <h2>Galerij</h2>
+            <h2>Shop</h2>
             <p>Hier zijn enkele van mijn werken:</p>
-            <div class="loading" id="loading">Bezig met laden van de galerij...</div>
+            <div class="loading" id="loading">Bezig met laden van de shop...</div>
             <div class="gallery-grid" id="gallery-grid"></div>
         </section>
     </main>
@@ -180,7 +180,7 @@
             return data;
         }
         
-        // Functie om galerij item te maken - ultra robuuste versie met fallback systeem
+        // Functie om shop item te maken - ultra robuuste versie met fallback systeem
         function createGalleryItem(item) {
             console.log('Creating gallery item for:', item);
             

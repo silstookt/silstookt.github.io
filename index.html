@@ -24,7 +24,7 @@
             
             <nav class="navigation">
                 <a href="index.html" class="nav-button active">Home</a>
-                <a href="galerij.html" class="nav-button">Galerij</a>
+                <a href="shop.html" class="nav-button">Shop</a>
                 <a href="contact.html" class="nav-button">Contact</a>
             </nav>
         </div>
@@ -42,7 +42,7 @@
         <section>
             <h2>Over mij</h2>
             <p>Dit is de persoonlijke website van Sil Stookt. Meer inhoud volgt binnenkort...</p>
-            <p>Bekijk mijn <a href="galerij.html" style="color: #3498db; text-decoration: none;">galerij</a> voor een overzicht van mijn keramische werken, of ga naar de <a href="contact.html" style="color: #3498db; text-decoration: none;">contact</a> pagina om in touch te komen.</p>
+            <p>Bekijk mijn <a href="shop.html" style="color: #3498db; text-decoration: none;">shop</a> voor een overzicht van mijn keramische werken, of ga naar de <a href="contact.html" style="color: #3498db; text-decoration: none;">contact</a> pagina om in touch te komen.</p>
         </section>
     </main>
     
@@ -185,7 +185,7 @@
             return data;
         }
         
-        // Functie om galerij item te maken - ultra robuuste versie met fallback systeem
+        // Functie om shop item te maken - ultra robuuste versie met fallback systeem
         function createGalleryItem(item) {
             console.log('Creating gallery item for:', item);
             
@@ -323,7 +323,7 @@
             const loading = document.getElementById('loading');
             const galleryGrid = document.getElementById('gallery-grid');
             
-            loading.textContent = 'Bezig met laden van de galerij...';
+            loading.textContent = 'Bezig met laden van de shop...';
             loading.style.display = 'block';
             
             try {
@@ -353,13 +353,13 @@
                     loading.style.display = 'none';
                     console.log('Gallery loaded successfully with', galleryData.length, 'items');
                 } else {
-                    loading.textContent = 'Geen galerij items gevonden in de CSV data.';
+                    loading.textContent = 'Geen shop items gevonden in de CSV data.';
                     console.log('No gallery items found');
                 }
                 
             } catch (error) {
-                console.error('Fout bij het laden van de galerij:', error);
-                loading.textContent = `Fout bij het laden van de galerij: ${error.message}. Controleer de browser console voor meer details.`;
+                console.error('Fout bij het laden van de shop:', error);
+                loading.textContent = `Fout bij het laden van de shop: ${error.message}. Controleer de browser console voor meer details.`;
             }
         }
         
@@ -732,7 +732,7 @@
                 }, 100);
             });
             
-            // Laad de galerij
+            // Laad de shop
             loadGallery();
         });
     </script>
