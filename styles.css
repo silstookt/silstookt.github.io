@@ -421,6 +421,32 @@ footer {
 }
 
 /* Touch-friendly responsiveness */
+@media (min-width: 506px) {
+    .header-container {
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+        text-align: left;
+        width: 100%;
+    }
+    
+    .logo {
+        height: 200px;
+    }
+    
+    .navigation {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .nav-button {
+        width: 75%;
+        text-align: center;
+    }
+}
+
 @media (max-width: 505px) {
     .header-container {
         flex-direction: row;
@@ -442,7 +468,7 @@ footer {
     }
     
     .nav-button {
-        width: 75px;
+        width: 100%;
         text-align: center;
     }
     
